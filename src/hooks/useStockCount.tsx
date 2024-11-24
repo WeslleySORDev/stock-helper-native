@@ -1,33 +1,47 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 
-interface StockProviderProps {
+interface StockCountProviderProps {
   children: ReactNode;
 }
 
-type ProductStockType = {
+type ProductType = {
+  productName?: string;
   productId: string;
   amount: number;
 };
 
-interface StockContextData {
-  stock: ProductStockType[];
-  addProduct: (productId: string) => Promise<void>;
-  removeProduct: (productId: string) => void;
-  updateProductAmount: ({ productId, amount }: ProductStockType) => void;
+type StockCountType = {
+  stockName: string;
+  stockId: string;
+  stockProducts: ProductType[];
+};
+
+interface StockCountContextData {
+  stockCountList: StockCountType[];
+  createStockCount: (name: string) => void;
+  deleteStockCount: (stockId: string) => void;
+  updateStockCount: (stockId: string) => void;
+  addProductToStockCount: (stockId: string) => void;
+  removeProductFromStockCount: (stockId: string) => void;
+  updateProductAmountFromStockCount: (stockId: string, amount: number) => void;
 }
 
-const StockContext = createContext<StockContextData>({} as StockContextData);
+const StockCountContext = createContext<StockCountContextData>(
+  {} as StockCountContextData
+);
 
-export function StockProvider({ children }: StockProviderProps): JSX.Element {
-  const [stock, setStock] = useState<ProductStockType[]>([
-    { productId: "ARL5112", amount: 5 },
-    { productId: "ARL2245", amount: 3 },
-    { productId: "S11954", amount: 1 },
-    { productId: "S19523", amount: 2 },
-    { productId: "S2143", amount: 8 },
-  ]);
+export function StockCountProvider({
+  children,
+}: StockCountProviderProps): JSX.Element {
+  const [stockCountList, setStockCountList] = useState<StockCountType[]>([]);
 
-  const addProduct = async (newProductId: string) => {
+  const createStockCount = (name: string) => {};
+
+  const deleteStockCount = (stockId: string) => {};
+
+  const updateStockCount = (stockId: string) => {};
+
+  const addProductToStockCount = async (newProductId: string) => {
     try {
       const updatedStock = [...stock];
       const productExists = updatedStock.find(
@@ -52,7 +66,7 @@ export function StockProvider({ children }: StockProviderProps): JSX.Element {
     }
   };
 
-  const removeProduct = (newProductId: string) => {
+  const removeProductFromStockCount = (newProductId: string) => {
     try {
       const updatedStock = [...stock];
       const findIndex = updatedStock.findIndex(
@@ -69,7 +83,7 @@ export function StockProvider({ children }: StockProviderProps): JSX.Element {
     }
   };
 
-  const updateProductAmount = async ({
+  const updateProductAmountFromStockCount = async ({
     productId,
     amount,
   }: ProductStockType) => {
@@ -94,15 +108,23 @@ export function StockProvider({ children }: StockProviderProps): JSX.Element {
   };
 
   return (
-    <StockContext.Provider
-      value={{ stock, addProduct, removeProduct, updateProductAmount }}
+    <StockCountContext.Provider
+      value={{
+        stockCountList,
+        addProductToStockCount,
+        removeProductFromStockCount,
+        updateProductAmountFromStockCount,
+        createStockCount,
+        deleteStockCount,
+        updateStockCount,
+      }}
     >
       {children}
-    </StockContext.Provider>
+    </StockCountContext.Provider>
   );
 }
 
-export function useStock(): StockContextData {
-  const context = useContext(StockContext);
+export function useStockCount(): StockCountContextData {
+  const context = useContext(StockCountContext);
   return context;
 }

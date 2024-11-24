@@ -1,11 +1,11 @@
 import { Slot } from "expo-router";
 import "../styles/globals.css";
-import { StockProvider } from "../hooks/useStock";
+import { StockCountProvider } from "../hooks/useStockCount";
 
 export default function RootLayout() {
   return (
-    <StockProvider>
+    <StockCountProvider>
       <Slot />
-    </StockProvider>
+    </StockCountProvider>
   );
 }
