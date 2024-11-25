@@ -67,10 +67,8 @@ export function StockCountProvider({
       return;
     }
 
-    copyStockCountList[findActualStockIndex].stockProducts.splice(
-      findActualStockIndex,
-      1
-    );
+    copyStockCountList.splice(findActualStockIndex, 1);
+
     setStockCountList(copyStockCountList);
   };
 
