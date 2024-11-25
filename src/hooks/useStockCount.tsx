@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface StockCountProviderProps {
   children: ReactNode;
@@ -20,10 +21,18 @@ interface StockCountContextData {
   stockCountList: StockCountType[];
   createStockCount: (name: string) => void;
   deleteStockCount: (stockId: string) => void;
-  updateStockCount: (stockId: string) => void;
-  addProductToStockCount: (stockId: string) => void;
-  removeProductFromStockCount: (stockId: string) => void;
-  updateProductAmountFromStockCount: (stockId: string, amount: number) => void;
+  // updateStockCount: (stockId: string) => void;
+  addProductToStockCount: (
+    stockId: string,
+    newProductId: string,
+    newProductName?: string
+  ) => void;
+  removeProductFromStockCount: (stockId: string, productId: string) => void;
+  updateProductAmountFromStockCount: (
+    stockId: string,
+    productId: string,
+    amount: number
+  ) => void;
 }
 
 const StockCountContext = createContext<StockCountContextData>(
@@ -35,76 +44,137 @@ export function StockCountProvider({
 }: StockCountProviderProps): JSX.Element {
   const [stockCountList, setStockCountList] = useState<StockCountType[]>([]);
 
-  const createStockCount = (name: string) => {};
-
-  const deleteStockCount = (stockId: string) => {};
-
-  const updateStockCount = (stockId: string) => {};
-
-  const addProductToStockCount = async (newProductId: string) => {
-    try {
-      const updatedStock = [...stock];
-      const productExists = updatedStock.find(
-        (product) => product.productId === newProductId
-      );
-      const currentAmount = productExists ? productExists.amount : 0;
-      const amount = currentAmount + 1;
-
-      if (productExists) {
-        productExists.amount = amount;
-      } else {
-        const newProduct = {
-          productId: newProductId,
-          amount: 1,
-        };
-        updatedStock.push(newProduct);
-      }
-
-      setStock(updatedStock);
-    } catch {
-      console.error("Erro na adição do produto");
-    }
+  const createStockCount = (name: string) => {
+    var copyStockCountList = [...stockCountList];
+    const newStockCount: StockCountType = {
+      stockId: uuidv4(),
+      stockName: name,
+      stockProducts: [],
+    };
+    copyStockCountList.push(newStockCount);
+    setStockCountList(copyStockCountList);
   };
 
-  const removeProductFromStockCount = (newProductId: string) => {
-    try {
-      const updatedStock = [...stock];
-      const findIndex = updatedStock.findIndex(
-        (product) => product.productId === newProductId
+  const deleteStockCount = (stockId: string) => {
+    var copyStockCountList = [...stockCountList];
+    const findActualStockIndex = copyStockCountList.findIndex(
+      (stock) => stock.stockId === stockId
+    );
+    if (findActualStockIndex === -1) {
+      console.error(
+        `Contagem de Estoque com o ID ${stockId} não encontrado no estoque.`
       );
-      if (findIndex >= 0) {
-        updatedStock.splice(findIndex, 1);
-        setStock(updatedStock);
-      } else {
-        throw Error();
-      }
-    } catch {
-      console.error("Erro na remoção do produto");
+      return;
     }
+
+    copyStockCountList[findActualStockIndex].stockProducts.splice(
+      findActualStockIndex,
+      1
+    );
+    setStockCountList(copyStockCountList);
   };
 
-  const updateProductAmountFromStockCount = async ({
-    productId,
-    amount,
-  }: ProductStockType) => {
-    try {
-      if (amount <= 0) {
-        return;
-      }
-      const updatedStock = [...stock];
-      const productExists = updatedStock.find(
-        (product) => product.productId === productId
-      );
+  // const updateStockCount = (stockId: string) => {};
 
-      if (productExists) {
-        productExists.amount = amount;
-        setStock(updatedStock);
-      } else {
-        throw Error();
-      }
-    } catch {
-      console.error("Erro na alteração de quantidade do produto");
+  const addProductToStockCount = (
+    stockId: string,
+    newProductId: string,
+    newProductName?: string
+  ) => {
+    var copyStockCountList = [...stockCountList];
+    const findActualStockIndex = copyStockCountList.findIndex(
+      (stock) => stock.stockId === stockId
+    );
+
+    if (findActualStockIndex === -1) {
+      console.error(
+        `Nenhuma contagem de estoque encontrada com o ID: ${stockId}`
+      );
+      return;
     }
+
+    const productExists = copyStockCountList[
+      findActualStockIndex
+    ].stockProducts.find((product) => product.productId === newProductId);
+    const currentAmount = productExists ? productExists.amount : 0;
+    const amount = currentAmount + 1;
+
+    if (productExists) {
+      productExists.amount = amount;
+    } else {
+      const newProduct: ProductType = {
+        productName: newProductName ? newProductName : undefined,
+        productId: newProductId,
+        amount: 1,
+      };
+      copyStockCountList[findActualStockIndex].stockProducts.push(newProduct);
+    }
+
+    setStockCountList(copyStockCountList);
+  };
+
+  const removeProductFromStockCount = (stockId: string, productId: string) => {
+    var copyStockCountList = [...stockCountList];
+    const findActualStockIndex = copyStockCountList.findIndex(
+      (stock) => stock.stockId === stockId
+    );
+
+    if (findActualStockIndex === -1) {
+      console.error(
+        `Nenhuma contagem de estoque encontrada com o ID: ${stockId}`
+      );
+      return;
+    }
+
+    const findProductIndex = copyStockCountList[
+      findActualStockIndex
+    ].stockProducts.findIndex((product) => product.productId === productId);
+
+    if (findProductIndex === -1) {
+      console.error(`Produto com o ID ${productId} não encontrado no estoque.`);
+      return;
+    }
+
+    copyStockCountList[findActualStockIndex].stockProducts.splice(
+      findProductIndex,
+      1
+    );
+    setStockCountList(copyStockCountList);
+  };
+
+  const updateProductAmountFromStockCount = (
+    stockId: string,
+    productId: string,
+    amount: number
+  ) => {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      console.error("Quantidade inválida fornecida:", amount);
+      return;
+    }
+
+    var copyStockCountList = [...stockCountList];
+    const findActualStockIndex = copyStockCountList.findIndex(
+      (stock) => stock.stockId === stockId
+    );
+
+    if (findActualStockIndex === -1) {
+      console.error(
+        `Nenhuma contagem de estoque encontrada com o ID: ${stockId}`
+      );
+      return;
+    }
+
+    const productExists = copyStockCountList[
+      findActualStockIndex
+    ].stockProducts.find((product) => product.productId === productId);
+
+    if (!productExists) {
+      console.error(`Produto com o ID ${productId} não encontrado no estoque.`);
+      return;
+    }
+
+    productExists.amount = amount;
+    setStockCountList(copyStockCountList);
   };
 
   return (
@@ -116,7 +186,7 @@ export function StockCountProvider({
         updateProductAmountFromStockCount,
         createStockCount,
         deleteStockCount,
-        updateStockCount,
+        // updateStockCount,
       }}
     >
       {children}
