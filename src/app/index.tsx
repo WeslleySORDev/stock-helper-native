@@ -15,14 +15,16 @@ import { useStockCount } from "../hooks/useStockCount";
 import { useState } from "react";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Link } from "expo-router";
+import EvilIcons from "@expo/vector-icons/EvilIcons";
 
 export default function Index() {
   const [modalVisible, setModalVisible] = useState(false);
-  const { stockCountList, createStockCount } = useStockCount();
+  const { stockCountList, createStockCount, deleteStockCount } =
+    useStockCount();
   const [newStockCountName, setNewStockCountName] = useState("");
 
   return (
-    <SafeAreaView className="flex-1 p-5 bg-[#f9fafb]">
+    <SafeAreaView className="flex-1 px-4 py-5 bg-[#f9fafb]">
       <StatusBar backgroundColor="#4f46e5" barStyle="light-content" />
       <TouchableHighlight
         className="ml-auto"
@@ -40,13 +42,39 @@ export default function Index() {
               href={`/stockCount/${stockCount.stockId}`}
               key={stockCount.stockId}
             >
-              <View className="flex flex-col gap-4 w-full p-2 border border-zinc-500 rounded">
-                <Text className="text-xl font-semibold capitalize">
-                  {stockCount.stockName}
-                </Text>
-                <Text>
-                  Quantidade de itens: {stockCount.stockProducts.length}
-                </Text>
+              <View className="flex flex-row p-2 border border-zinc-500 rounded">
+                <View className="flex flex-col gap-4 flex-1">
+                  <Text className="text-xl font-semibold capitalize">
+                    {stockCount.stockName}
+                  </Text>
+                  <Text>
+                    Quantidade de itens: {stockCount.stockProducts.length}
+                  </Text>
+                </View>
+                <View className="flex flex-row items-center gap-3">
+                  <EvilIcons name="pencil" size={28} color="#0a60ff" />
+                  <TouchableHighlight
+                    onPress={() => {
+                      Alert.alert(
+                        "Remover contagem",
+                        `Você tem certeza que deseja remover a contagem ${stockCount.stockName} da lista ?`,
+                        [
+                          {
+                            text: "Não",
+                            onPress: () => {},
+                          },
+                          {
+                            text: "Sim",
+                            onPress: () => deleteStockCount(stockCount.stockId),
+                          },
+                        ],
+                        { cancelable: true }
+                      );
+                    }}
+                  >
+                    <EvilIcons name="trash" size={28} color="#ce3c3e" />
+                  </TouchableHighlight>
+                </View>
               </View>
             </Link>
           ))
