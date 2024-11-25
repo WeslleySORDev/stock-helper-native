@@ -1,5 +1,12 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface StockCountProviderProps {
   children: ReactNode;
@@ -19,20 +26,23 @@ type StockCountType = {
 
 interface StockCountContextData {
   stockCountList: StockCountType[];
-  createStockCount: (name: string) => void;
-  deleteStockCount: (stockId: string) => void;
-  // updateStockCount: (stockId: string) => void;
+  createStockCount: (name: string) => Promise<void>;
+  deleteStockCount: (stockId: string) => Promise<void>;
+  // updateStockCount: (stockId: string) => Promise<void>;
   addProductToStockCount: (
     stockId: string,
     newProductCode: string,
     newProductName?: string
-  ) => void;
-  removeProductFromStockCount: (stockId: string, productCode: string) => void;
+  ) => Promise<void>;
+  removeProductFromStockCount: (
+    stockId: string,
+    productCode: string
+  ) => Promise<void>;
   updateProductAmountFromStockCount: (
     stockId: string,
     productCode: string,
     amount: number
-  ) => void;
+  ) => Promise<void>;
 }
 
 const StockCountContext = createContext<StockCountContextData>(
@@ -44,7 +54,21 @@ export function StockCountProvider({
 }: StockCountProviderProps): JSX.Element {
   const [stockCountList, setStockCountList] = useState<StockCountType[]>([]);
 
-  const createStockCount = (name: string) => {
+  const getStockCountFromLocalStorage = async () => {
+    try {
+      const storagedCart = await AsyncStorage.getItem("stock-helper-app");
+      if (storagedCart !== null) {
+        setStockCountList(JSON.parse(storagedCart));
+      }
+    } catch {
+      return [];
+    }
+  };
+  useEffect(() => {
+    getStockCountFromLocalStorage();
+  }, []);
+
+  const createStockCount = async (name: string) => {
     var copyStockCountList = [...stockCountList];
     const newStockCount: StockCountType = {
       stockId: uuidv4(),
@@ -53,9 +77,15 @@ export function StockCountProvider({
     };
     copyStockCountList.push(newStockCount);
     setStockCountList(copyStockCountList);
+    try {
+      const jsonValue = JSON.stringify(copyStockCountList);
+      await AsyncStorage.setItem("stock-helper-app", jsonValue);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const deleteStockCount = (stockId: string) => {
+  const deleteStockCount = async (stockId: string) => {
     var copyStockCountList = [...stockCountList];
     const findActualStockIndex = copyStockCountList.findIndex(
       (stock) => stock.stockId === stockId
@@ -66,15 +96,19 @@ export function StockCountProvider({
       );
       return;
     }
-
     copyStockCountList.splice(findActualStockIndex, 1);
-
     setStockCountList(copyStockCountList);
+    try {
+      const jsonValue = JSON.stringify(copyStockCountList);
+      await AsyncStorage.setItem("stock-helper-app", jsonValue);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // const updateStockCount = (stockId: string) => {};
 
-  const addProductToStockCount = (
+  const addProductToStockCount = async (
     stockId: string,
     newProductCode: string,
     newProductName?: string
@@ -109,9 +143,15 @@ export function StockCountProvider({
     }
 
     setStockCountList(copyStockCountList);
+    try {
+      const jsonValue = JSON.stringify(copyStockCountList);
+      await AsyncStorage.setItem("stock-helper-app", jsonValue);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const removeProductFromStockCount = (
+  const removeProductFromStockCount = async (
     stockId: string,
     productCode: string
   ) => {
@@ -143,9 +183,15 @@ export function StockCountProvider({
       1
     );
     setStockCountList(copyStockCountList);
+    try {
+      const jsonValue = JSON.stringify(copyStockCountList);
+      await AsyncStorage.setItem("stock-helper-app", jsonValue);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const updateProductAmountFromStockCount = (
+  const updateProductAmountFromStockCount = async (
     stockId: string,
     productCode: string,
     amount: number
@@ -180,6 +226,12 @@ export function StockCountProvider({
 
     productExists.amount = amount;
     setStockCountList(copyStockCountList);
+    try {
+      const jsonValue = JSON.stringify(copyStockCountList);
+      await AsyncStorage.setItem("stock-helper-app", jsonValue);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
